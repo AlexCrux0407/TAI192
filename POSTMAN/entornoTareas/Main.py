@@ -16,3 +16,8 @@ tareas = [
         "estado": "pendiente"
     }
 ]
+
+#mostar tareas
+@app.get("/tareas", tags=["tareas"])
+def mostrarTareas():
+    return {"Las tareas registradas son": tareas}
