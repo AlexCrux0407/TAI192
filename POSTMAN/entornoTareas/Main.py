@@ -37,3 +37,12 @@ def buscarTarea(id: int):
         if tarea["id"] == id:
             return tarea
     raise HTTPException(status_code=404, detail="Tarea no encontrada")
+
+#crear tarea
+@app.post("/tareas", tags=["tareas"])
+def crearTarea(tarea: dict):
+    for t in tareas:
+        if t["id"] == tarea["id"]:
+            raise HTTPException(status_code=400, detail="El ID de tarea ya existe")
+    tareas.append(tarea)
+    return {"La tarea se creó correctamente": tarea}
