@@ -8,3 +8,8 @@ class modeloUsuario(BaseModel):
                        max_length=85,
                        description="Correo electrónico.")
 
+class modeloAuth(BaseModel):
+    correo:EmailStr = Field(...,min_length=5,
+                       max_length=85,
+                       description="Correo electrónico.")
+    passw:str = Field(..., min_length=8, strip_whitespace = True, description="Contraseña: Min 8 caracteres.")

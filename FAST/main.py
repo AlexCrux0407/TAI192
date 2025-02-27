@@ -1,6 +1,8 @@
 from fastapi import FastAPI,HTTPException
+from fastapi.responses import JSONResponse
 from typing import Optional,List
-from models import modeloUsuario
+from modelsPydantic import modeloUsuario,modeloAuth
+from genToken import createToken
 app = FastAPI(
     title="Mi primer API 192",
     description="Esto es una descripción de mi API",
@@ -56,3 +58,13 @@ def eliminarUsuario(id: int):
             usuarios.pop(i)
             return {"El usuario se eliminó correctamente": {"id": id}}
     raise HTTPException(status_code=404, detail="El usuario no existe")
+
+#endpoint autenticacion
+@app.post("/auth", response_model =modeloAuth, tags=["Autentificación"])
+def login(autorizacion: modeloAuth):
+    if autorizacion.correo == "alexis@gmail.com" and autorizacion.passw == "admin123":
+        token: str = createToken(autorizacion.model_dump())
+        print(token)
+        return JSONResponse(token)
+    else:
+        raise HTTPException(status_code=400, detail="Usuario sin acceso")
