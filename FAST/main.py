@@ -5,6 +5,8 @@ from typing import Optional, List, Dict
 from modelsPydantic import modeloUsuario, modeloAuth
 from genToken import createToken
 from middlewares import BearerJWT
+from DB.conexion import Session,Base,engine
+from models.modelsDB import User
 
 app = FastAPI(
     title="Mi primer API 192",
@@ -12,6 +14,8 @@ app = FastAPI(
     version="1.0.1"
 )
 
+Base.metadata.create_all(bind=engine)
+    
 usuarios = [
     {"id": 1, "nombre": "Alexis", "edad": 21, "correo": "alexis@gmail.com"},
     {"id": 2, "nombre": "Jose", "edad": 25, "correo": "jose@gmail.com"},
@@ -25,7 +29,7 @@ def home():
     return {"hello": "world FastAPI"}
 
 # endpoint consulta todos
-@app.get("/todosUsuariox", dependencies=[Depends(BearerJWT())], response_model=List[modeloUsuario], tags=["Operaciones CRUD"])
+@app.get("/todosUsuarios", dependencies=[Depends(BearerJWT())], response_model=List[modeloUsuario], tags=["Operaciones CRUD"])
 def leerUsuarios():
     return usuarios
 
@@ -66,3 +70,4 @@ def login(autorizacion: modeloAuth):
         return {"access_token": token, "token_type": "bearer"}
     else:
         raise HTTPException(status_code=400, detail="Usuario sin acceso")
+    

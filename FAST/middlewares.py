@@ -10,5 +10,5 @@ class BearerJWT(HTTPBearer):
         if not isinstance(data, dict):  # Verificar si es un diccionario válido
             raise HTTPException(status_code=401, detail="Token inválido")
 
-        if data.get('correo') != 'alexis@gmail.com':  # Changed from 'email' to 'correo'
+        if data.get('correo') != 'alexis@gmail.com':  
             raise HTTPException(status_code=403, detail="Credenciales no válidas")
