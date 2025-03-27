@@ -57,7 +57,7 @@ def leerUsuario(id: int):
         
         
 # endpoint Agregar nuevos usuarios
-@app.post("/usuarios/", dependencies=[Depends(BearerJWT())], response_model=modeloUsuario, tags=["Operaciones CRUD"])
+@app.post("/usuarios/", response_model=modeloUsuario, tags=["Operaciones CRUD"])
 def agregarUsuario(usuario: modeloUsuario):
     db = Session()
     try:
@@ -71,24 +71,42 @@ def agregarUsuario(usuario: modeloUsuario):
         db.close()
 
 # endpoint Actualizar un usuario
-@app.put("/usuarios/{id}", dependencies=[Depends(BearerJWT())], response_model=modeloUsuario, tags=["Operaciones CRUD"])
+@app.put("/usuarios/{id}", response_model=modeloUsuario, tags=["Operaciones CRUD"])
 def actualizarUsuario(id: int, usuario: modeloUsuario):
-    for index, usr in enumerate(usuarios):
-        if usr["id"] == id:
-            usuarios[index] = usuario.model_dump()
-            return usuarios[index]
-
-    raise HTTPException(status_code=400, detail="El usuario no existe")
+    db = Session()
+    try:
+        consultados = db.query(User).filter(User.id == id).first()
+        if not consultados:
+            return JSONResponse(status_code=404, content={"message": "Usuario no encontrado"})        
+        for key, value in usuario.model_dump().items():
+            setattr(consultados, key, value)
+            return JSONResponse(status_code=200, content={"message": "Usuario actualizado correctamente", "usuario": usuario.model_dump()})        
+        db.commit()
+        db.refresh(consultados) 
+        return JSONResponse(content=jsonable_encoder(consultados))
+    except Exception as e:
+        db.rollback()
+        return JSONResponse(status_code=500, content={"message": "error al actualizar usuario", "Excepcion": str(e)})
+    finally:
+        db.close()
 
 # endpoint Eliminar un usuario
-@app.delete("/usuarios/{id}", dependencies=[Depends(BearerJWT())], tags=["Operaciones CRUD"])
+@app.delete("/usuarios/{id}", response_model=Dict[str, str], tags=["Operaciones CRUD"])
 def eliminarUsuario(id: int):
-    for i, usr in enumerate(usuarios):
-        if usr["id"] == id:
-            usuarios.pop(i)
-            return {"El usuario se eliminó correctamente": {"id": id}}
-    raise HTTPException(status_code=404, detail="El usuario no existe")
-
+    db = Session()
+    try:
+        consultatres = db.query(User).filter(User.id == id).first()
+        if not consultatres:
+            return JSONResponse(status_code=404, content={"message": "Usuario no encontrado"})        
+        db.delete(consultatres)
+        db.commit()
+        return JSONResponse(status_code=200, content={"message": "Usuario eliminado correctamente"})
+    except Exception as e:
+        db.rollback()
+        return JSONResponse(status_code=500, content={"message": "error al eliminar usuario", "Excepcion": str(e)})
+    finally:
+        db.close()
+        
 # endpoint autenticacion
 @app.post("/auth", tags=["Autentificación"])
 def login(autorizacion: modeloAuth):
@@ -98,4 +116,3 @@ def login(autorizacion: modeloAuth):
         return {"access_token": token, "token_type": "bearer"}
     else:
         raise HTTPException(status_code=400, detail="Usuario sin acceso")
-    
